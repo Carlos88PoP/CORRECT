@@ -1,0 +1,181 @@
+<body>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Ordem de Serviço</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 600px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
+
+    <div class="container">
+        <h2>Registro de Ordem de Serviço</h2>
+        <form id="osForm">
+
+            <div class="form-group">
+                <label for="edificio">Edifício:</label>
+                <select id="edificio" required>
+                    <option value="SEDE">SEDE</option>
+                    <option value="ANEXO A">ANEXO A</option>
+                    <option value="ANEXO B">ANEXO B</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="dataSolicitacao">Data Solicitação:</label>
+                <input type="date" id="dataSolicitacao" required>
+            </div>
+            <div class="form-group">
+                <label for="dataExecucao">Data Execução:</label>
+                <input type="date" id="dataExecucao" required>
+            </div>
+            <div class="form-group">
+                <label for="local">Local:</label>
+                <input type="text" id="local" required>
+            </div>
+            <div class="form-group">
+                <label for="tipoServico">Serviço:</label>
+                <input type="text" id="tipoServico" value="Refrigeração" disabled>
+            </div>
+            <div class="form-group">
+                <label for="tipoEquipamento">Tipo de Equipamento:</label>
+                <input type="text" id="tipoEquipamento" required>
+            </div>
+            <div class="form-group">
+                <label for="detalheServico">Detalhe do Serviço:</label>
+                <textarea id="detalheServico" rows="4" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="materiais">Materiais Utilizados:</label>
+                <textarea id="materiais" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="fotoAntes">Foto Antes:</label>
+                <input type="file" id="fotoAntes" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="fotoDepois">Foto Depois:</label>
+                <input type="file" id="fotoDepois" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="executantes">Executante(s):</label>
+                <textarea id="executantes" rows="2" placeholder="Insira os nomes dos técnicos responsáveis" required></textarea>
+            </div>
+            <button type="button" id="gerarPDF">Gerar PDF</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('gerarPDF').addEventListener('click', async function () {
+            const edificio = document.getElementById('edificio').value;
+            const dataSolicitacao = document.getElementById('dataSolicitacao').value;
+            const dataExecucao = document.getElementById('dataExecucao').value;
+            const local = document.getElementById('local').value;
+            const tipoServico = document.getElementById('tipoServico').value;
+            const tipoEquipamento = document.getElementById('tipoEquipamento').value;
+            const detalheServico = document.getElementById('detalheServico').value;
+            const materiais = document.getElementById('materiais').value;
+            const executantes = document.getElementById('executantes').value;
+
+            const fotoAntesInput = document.getElementById('fotoAntes');
+            const fotoDepoisInput = document.getElementById('fotoDepois');
+
+            const fotoAntes = await readImageAsBase64(fotoAntesInput);
+            const fotoDepois = await readImageAsBase64(fotoDepoisInput);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(12);
+
+            doc.text("MANUTENÇÃO CORRETIVA", 10, 10);
+            doc.text(`Edifício: ${edificio}`, 10, 20);
+            doc.text(`Data Solicitação: ${dataSolicitacao}`, 10, 30);
+            doc.text(`Data Execução: ${dataExecucao}`, 120, 30);
+            doc.text(`Local: ${local}`, 10, 40);
+            doc.text(`Serviço: ${tipoServico}`, 10, 50);
+            doc.text(`Tipo de Equipamento: ${tipoEquipamento}`, 10, 60);
+            doc.text("Detalhe do Serviço:", 10, 70);
+            doc.text(detalheServico, 10, 80, { maxWidth: 180 });
+            doc.text("Materiais Utilizados:", 10, 110);
+            doc.text(materiais, 10, 120, { maxWidth: 180 });
+            doc.text("Executante(s):", 10, 150);
+            doc.text(executantes, 10, 160, { maxWidth: 180 });
+
+            if (fotoAntes) {
+                doc.text("Foto Antes:", 10, 180);
+                doc.addImage(fotoAntes, 'JPEG', 10, 190, 80, 80);
+            }
+
+            if (fotoDepois) {
+                doc.text("Foto Depois:", 110, 180);
+                doc.addImage(fotoDepois, 'JPEG', 110, 190, 80, 80);
+            }
+
+            doc.save("Ordem_de_Servico.pdf");
+        });
+
+        function readImageAsBase64(inputElement) {
+            return new Promise((resolve) => {
+                const file = inputElement.files[0];
+                if (!file) {
+                    resolve(null);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
